@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TA Dashboard | CarDekho Group</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-view="overview">
+  <header class="app-header">
+    <div class="brand-block">
+      <img src="https://images.seeklogo.com/logo-png/41/1/cardekho-logo-png_seeklogo-410133.png" alt="CarDekho Group" class="brand-logo">
+      <div>
+        <div class="eyebrow">CarDekho Group Talent Acquisition</div>
+        <h1>TA Dashboard
+        </h1>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="sync-meta" id="syncMeta">Not synced yet</span>
+      <button class="icon-button" id="themeToggle" type="button" title="Toggle theme" aria-label="Toggle theme">â—</button>
+      <label class="switch" title="Shareable dashboard view">
+        <input id="shareableToggle" type="checkbox" checked>
+        <span>Shareable</span>
+      </label>
+      <button class="primary-button" id="syncButton" type="button">Sync data</button>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="source-panel" aria-label="Data source">
+      <div>
+        <strong>Raw source</strong>
+        <span id="sourceUrl">Google Sheets master tracker</span>
+      </div>
+      <div class="source-controls">
+        <label>
+          Sheet GIDs
+          <input id="gidInput" type="text" value="0" aria-label="Sheet GIDs" title="Comma-separated sheet GIDs, for example 0,123456">
+        </label>
+        <label>
+          Poll
+          <select id="pollSelect" aria-label="Polling interval">
+            <option value="0">Manual</option>
+            <option value="30" selected>30s</option>
+            <option value="60">60s</option>
+            <option value="300">5m</option>
+          </select>
+        </label>
+        <button class="ghost-button" id="exportButton" type="button">Export CSV</button>
+      </div>
+    </section>
+
+    <section class="narrative-banner" id="narrativeBanner">
+      <strong>Net read:</strong>
+      <span id="narrativeText">Sync the tracker to load the latest hiring intelligence.</span>
+    </section>
+
+    <nav class="view-tabs" aria-label="Dashboard views">
+      <button class="view-tab active" type="button" data-view="overview">Dashboard</button>
+      <button class="view-tab" type="button" data-view="tracker">Position Tracker</button>
+    </nav>
+
+    <section class="filter-bar" aria-label="Filters">
+      <div class="filter-head">
+        <div>
+          <strong>Global filters</strong>
+          <span id="filterCount">0 of 0 reqs</span>
+        </div>
+        <button class="ghost-button" id="resetFilters" type="button">Reset all</button>
+      </div>
+      <div class="filter-grid" id="filters"></div>
+    </section>
+
+    <div class="view-panel" data-panel="overview">
+      <section class="executive-summary panel" id="executiveSummary" aria-label="Executive action summary"></section>
+
+      <section class="kpi-grid" id="kpiGrid" aria-label="Command centre KPIs"></section>
+
+      <section class="scope-tabs-wrap" aria-label="Business unit and lead tabs">
+        <div class="scope-tabs" id="scopeTabs"></div>
+      </section>
+
+    <section class="content-section">
+      <div class="section-title">
+        <div>
+          <h2 id="scorecardTitle">Business Unit Scorecard</h2>
+          <p id="scorecardSubtitle">Closure, active load, budget discipline, source mix, and open vintage by BU.</p>
+        </div>
+      </div>
+      <div class="leader-grid" id="businessUnitCards"></div>
+    </section>
+
+    <section class="three-grid">
+      <div class="panel">
+        <div class="panel-heading">
+          <h2>Pipeline Aging</h2>
+          <p>Open roles by Business Unit across 0-30, 30-60, 60-90, and 90+ day TAT buckets.</p>
+        </div>
+        <div id="agingChart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-heading">
+          <h2>Offers by Month</h2>
+          <p>Offer velocity split by Business Unit.</p>
+        </div>
+        <div id="offersChart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-heading">
+          <h2>Monthly Joiners</h2>
+          <p>Joins landed in FY-27, Apr-26 onwards, split by Business Unit.</p>
+        </div>
+        <div id="joinersChart"></div>
+      </div>
+    </section>
+
+    <section class="three-grid">
+      <div class="panel">
+        <div class="panel-heading">
+          <h2>Budget Discipline</h2>
+          <p>Within-budget offers by leader.</p>
+        </div>
+        <div id="budgetChart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-heading">
+          <h2>Source Mix</h2>
+          <p>Distribution of positions across source categories.</p>
+        </div>
+        <div id="sourceChart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-heading">
+          <h2>TAT Buckets</h2>
+          <p>Reqs by turnaround age bands from the PRD.</p>
+        </div>
+        <div id="tatBuckets"></div>
+      </div>
+    </section>
+
+    <section class="three-grid">
+      <div class="panel">
+        <div class="panel-heading">
+          <h2>Recruiter Performance</h2>
+          <p>Load, closure rate, TAT, and active reqs.</p>
+        </div>
+        <div id="recruiterList"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-heading">
+          <h2>AI Insights & Actions</h2>
+          <p>Rule-based recommendations from the live tracker.</p>
+        </div>
+        <div id="insights"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-heading">
+          <h2>Data Quality</h2>
+          <p>Trust checks for BU reviews and weekly exports.</p>
+        </div>
+        <div id="dataQuality"></div>
+      </div>
+    </section>
+    </div>
+
+    <section class="content-section view-panel" data-panel="tracker">
+      <div class="section-title">
+        <div>
+          <h2>Position Tracker</h2>
+          <p>Full drill-down table. Global filters and BU/Lead tabs apply here.</p>
+        </div>
+        <input id="searchInput" class="search-input" type="search" placeholder="Search req, role, city, recruiter">
+      </div>
+      <div class="table-panel detail-panel">
+        <table class="data-table detail-table" id="detailTable">
+          <thead>
+            <tr>
+              <th data-sort="reqId">Req ID</th>
+              <th data-sort="blt">Leader</th>
+              <th data-sort="businessUnit">Business Unit</th>
+              <th data-sort="span">Span</th>
+              <th data-sort="role">Role</th>
+              <th data-sort="location">Location</th>
+              <th data-sort="zone">Zone</th>
+              <th data-sort="band">Band</th>
+              <th data-sort="reqOpenMonth">Opened</th>
+              <th data-sort="tat" class="num">TAT</th>
+              <th data-sort="status">Status</th>
+              <th data-sort="recruiter">Recruiter</th>
+              <th data-sort="dojMonth">DOJ</th>
+              <th data-sort="tat">Aging</th>
+              <th>Risk</th>
+              <th>Suggested Action</th>
+              <th>Owner Needed</th>
+            </tr>
+          </thead>
+          <tbody id="detailBody"></tbody>
+        </table>
+      </div>
+      <div class="table-foot" id="tableFoot"></div>
+    </section>
+  </main>
+
+  <template id="emptyState">
+    <div class="empty-state">
+      <strong>No rows loaded</strong>
+      <span>Use Sync data. If Google blocks the request, make the sheet readable to anyone with the link or publish the relevant tabs.</span>
+    </div>
+  </template>
+
+  <div class="modal-overlay" id="qualityOverlay" hidden>
+    <section class="quality-modal" role="dialog" aria-modal="true" aria-labelledby="qualityModalTitle">
+      <div class="quality-modal-head">
+        <div>
+          <h2 id="qualityModalTitle">Data quality records</h2>
+          <p id="qualityModalSubtitle">Records needing tracker cleanup.</p>
+        </div>
+        <button class="icon-button" id="qualityModalClose" type="button" aria-label="Close data quality details">Ã—</button>
+      </div>
+      <div class="table-panel quality-detail-panel">
+        <table class="data-table quality-detail-table">
+          <thead>
+            <tr>
+              <th>S.No.</th>
+              <th>Req Code</th>
+              <th>Business Unit</th>
+              <th>Role</th>
+              <th>Recruiter</th>
+              <th>Status</th>
+              <th class="num">TAT</th>
+              <th>Issue</th>
+              <th>Fix Hint</th>
+            </tr>
+          </thead>
+          <tbody id="qualityModalBody"></tbody>
+        </table>
+      </div>
+      <div class="table-foot" id="qualityModalFoot"></div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
