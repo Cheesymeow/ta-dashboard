@@ -570,6 +570,7 @@ function render() {
   renderTatBuckets(rows);
   renderInsights(rows);
   renderDataQuality(rows);
+  renderChro();
   renderDetail(rows);
 }
 
@@ -984,6 +985,230 @@ function renderDataQuality(rows) {
     const cls = count > 10 ? "risk" : count > 0 ? "warn" : "good";
     return `<div class="quality-row ${cls}" data-tooltip="${escapeHtml(note)}"><span>${escapeHtml(label)}</span><button class="quality-count ${cls}" type="button" data-quality-key="${escapeHtml(key)}" ${count ? "" : "disabled"}>${count}</button><em>${escapeHtml(note)}</em></div>`;
   }).join("");
+}
+
+const CHRO_TARGETS = { closureRate: 0.75, tatDays: 45, budgetPct: 0.85 };
+
+function renderChro() {
+  if ($("chroHeadlines")) renderChroHeadlines(state.rows);
+  if ($("chroFunnel")) renderChroFunnel(state.rows);
+  if ($("chroVelocity")) renderChroVelocity(state.rows);
+  if ($("chroBuTable")) renderChroBuTable(state.rows);
+}
+
+function renderChroHeadlines(rows) {
+  const m = metrics(rows);
+  const currentFy = `FY ${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+  const filledCurrentFy = rows.filter((r) => r.fy === currentFy && r.status === "Filled").length;
+
+  const tiles = [
+    { label: "Filled (Current FY)", value: filledCurrentFy, target: null, actual: filledCurrentFy },
+    { label: "Closure Rate", value: pct(m.closure), target: pct(CHRO_TARGETS.closureRate), actual: m.closure, targetVal: CHRO_TARGETS.closureRate },
+    { label: "Avg TAT", value: `${Math.round(m.tatAvg ?? 0)}d`, target: `â‰¤${CHRO_TARGETS.tatDays}d`, actual: m.tatAvg ?? 0, targetVal: CHRO_TARGETS.tatDays, invert: true },
+    { label: "Budget Discipline", value: pct(m.budgetPct), target: `â‰¥${pct(CHRO_TARGETS.budgetPct)}`, actual: m.budgetPct, targetVal: CHRO_TARGETS.budgetPct }
+  ];
+
+  $("chroHeadlines").innerHTML = tiles.map((tile) => {
+    const delta = tile.targetVal !== undefined ? tile.actual - tile.targetVal : 0;
+    const deltaSign = delta > 0 ? "+" : "";
+    const deltaPct = Math.abs(Math.round(delta * 100));
+    const deltaClass = (tile.invert ? delta < 0 : delta > 0) ? "positive" : "negative";
+    const progressPct = tile.targetVal ? Math.min(100, Math.max(0, (tile.actual / tile.targetVal) * 100)) : 0;
+
+    return `<div class="chro-headline-tile">
+      <span class="label">${escapeHtml(tile.label)}</span>
+      <span class="value">${escapeHtml(tile.value)}</span>
+      <div class="meta">
+        ${tile.target ? `<span class="target-pill">Target: ${escapeHtml(tile.target)}</span>` : ""}
+        ${tile.targetVal ? `<span class="delta-pill ${deltaClass}">${deltaSign}${deltaPct}${tile.label.includes("Rate") || tile.label.includes("Budget") ? "pp" : ""}</span>` : ""}
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width: ${progressPct}%"></div></div>
+    </div>`;
+  }).join("");
+}
+
+function renderChroFunnel(rows) {
+  const m = metrics(rows);
+  const total = m.total;
+  const active = m.active;
+  const offered = m.offered;
+  const filled = m.filled;
+
+  const stages = [
+    { label: "Total Reqs", count: total, color: "stage-0" },
+    { label: "Active", count: active, color: "stage-1" },
+    { label: "Offered", count: offered, color: "stage-2" },
+    { label: "Filled", count: filled, color: "stage-3" }
+  ];
+
+  let html = "";
+  stages.forEach((stage, idx) => {
+    const pct = total > 0 ? (stage.count / total) * 100 : 0;
+    html += `<div class="funnel-stage">
+      <span class="funnel-label">${escapeHtml(stage.label)}</span>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar ${stage.color}" style="width: ${pct}%;">${stage.count}</div>
+      </div>
+      <span class="funnel-count">${stage.count}</span>
+    </div>`;
+
+    if (idx < stages.length - 1) {
+      const nextStage = stages[idx + 1];
+      const convPct = stage.count > 0 ? Math.round((nextStage.count / stage.count) * 100) : 0;
+      html += `<div class="funnel-conversion">â†“ ${convPct}% progressed</div>`;
+    }
+  });
+
+  $("chroFunnel").innerHTML = html;
+}
+
+function renderChroVelocity(rows) {
+  const monthlyData = {};
+  const fyMonths = {};
+
+  rows.forEach((r) => {
+    if (r.dojMonth) {
+      const idx = monthIndex(r.dojMonth);
+      if (idx >= monthIndex("Apr-26")) {
+        monthlyData[r.dojMonth] = (monthlyData[r.dojMonth] ?? 0) + 1;
+      }
+    }
+    if (r.offerMonth) {
+      const idx = monthIndex(r.offerMonth);
+      if (idx >= monthIndex("Apr-26")) {
+        fyMonths[r.offerMonth] = (fyMonths[r.offerMonth] ?? 0) + 1;
+      }
+    }
+  });
+
+  const allMonths = [...new Set([...Object.keys(monthlyData), ...Object.keys(fyMonths)])].sort((a, b) => monthIndex(a) - monthIndex(b));
+  if (allMonths.length === 0) {
+    $("chroVelocity").innerHTML = `<div style="text-align: center; color: var(--muted); padding: var(--space-6);">No joining or offer data available for Apr-26 onwards.</div>`;
+    return;
+  }
+
+  const maxJoiners = Math.max(...allMonths.map((m) => monthlyData[m] ?? 0), 1);
+  const maxOffers = Math.max(...allMonths.map((m) => fyMonths[m] ?? 0), 1);
+  const maxVal = Math.max(maxJoiners, maxOffers);
+  const padding = { top: 20, right: 30, bottom: 40, left: 40 };
+  const width = 600;
+  const height = 180;
+  const graphWidth = width - padding.left - padding.right;
+  const graphHeight = height - padding.top - padding.bottom;
+
+  const scale = graphHeight / maxVal;
+  const xStep = graphWidth / (allMonths.length - 1 || 1);
+
+  let joinersPath = `M ${padding.left}`;
+  let offersPath = `M ${padding.left}`;
+  let dots = "";
+
+  allMonths.forEach((month, idx) => {
+    const x = padding.left + (idx * xStep);
+    const yJoiners = padding.top + graphHeight - ((monthlyData[month] ?? 0) * scale);
+    const yOffers = padding.top + graphHeight - ((fyMonths[month] ?? 0) * scale);
+
+    if (idx === 0) {
+      joinersPath += ` ${yJoiners}`;
+      offersPath += ` ${yOffers}`;
+    } else {
+      joinersPath += ` L ${x} ${yJoiners}`;
+      offersPath += ` L ${x} ${yOffers}`;
+    }
+
+    dots += `<circle cx="${x}" cy="${yJoiners}" r="3" fill="var(--brand)" opacity="0.8" />`;
+  });
+
+  const yAxisLabels = [Math.round(maxVal), Math.round(maxVal / 2), 0].map((v, i) => {
+    const y = padding.top + (i * graphHeight / 2);
+    return `<text x="20" y="${y + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${v}</text>`;
+  }).join("");
+
+  const monthLabels = allMonths.map((month, idx) => {
+    const x = padding.left + (idx * xStep);
+    return `<text x="${x}" y="${height - 15}" text-anchor="middle" font-size="11" fill="var(--muted)" transform="rotate(-45 ${x} ${height - 15})">${month}</text>`;
+  }).join("");
+
+  $("chroVelocity").innerHTML = `
+    <svg class="chro-velocity-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
+      ${yAxisLabels}
+      ${monthLabels}
+      <line x1="${padding.left}" y1="${padding.top + graphHeight}" x2="${width - padding.right}" y2="${padding.top + graphHeight}" stroke="var(--rule)" stroke-width="1" />
+      <path d="${offersPath}" stroke="var(--brand)" stroke-width="2" fill="none" opacity="0.4" />
+      <path d="${joinersPath}" stroke="var(--brand)" stroke-width="2.5" fill="none" />
+      ${dots}
+      <text x="${width / 2}" y="15" text-anchor="middle" font-size="12" font-weight="600" fill="var(--body)">Joiners (Primary) &amp; Offers (Faint)</text>
+    </svg>
+  `;
+}
+
+function renderChroBuTable(rows) {
+  const buData = {};
+
+  rows.forEach((r) => {
+    if (!r.businessUnit || r.businessUnit === "Unknown") return;
+    if (!buData[r.businessUnit]) {
+      buData[r.businessUnit] = { total: 0, filled: 0, active: 0, offered: 0, tbo: 0, open: 0, tatSum: 0, tatCount: 0, budgetSum: 0, budgetCount: 0 };
+    }
+    const bu = buData[r.businessUnit];
+    bu.total++;
+    if (r.status === "Filled") bu.filled++;
+    if (r.status === "Offered") bu.offered++;
+    if (r.status === "TBO") bu.tbo++;
+    if (r.status === "Open") bu.open++;
+    bu.active += ["Open", "TBO", "Offered"].includes(r.status) ? 1 : 0;
+    if (Number.isFinite(r.tat)) { bu.tatSum += r.tat; bu.tatCount++; }
+    if (["Filled", "Offered"].includes(r.status) && r.maxBudget && r.offeredCtc) {
+      bu.budgetSum += (r.offeredCtc <= r.maxBudget ? 1 : 0);
+      bu.budgetCount++;
+    }
+  });
+
+  const buRows = Object.entries(buData).map(([bu, data]) => ({
+    bu,
+    total: data.total,
+    filled: data.filled,
+    active: data.active,
+    closure: data.active + data.filled > 0 ? (data.filled + data.offered) / (data.active + data.filled) : 0,
+    tat: data.tatCount > 0 ? data.tatSum / data.tatCount : 0,
+    budget: data.budgetCount > 0 ? data.budgetSum / data.budgetCount : 0,
+    health: data.total > 0 ? healthScore({ closure: (data.filled + data.offered) / (data.active + data.filled), tatAvg: data.tatCount > 0 ? data.tatSum / data.tatCount : 0, freshPct: 0, budgetPct: data.budgetCount > 0 ? data.budgetSum / data.budgetCount : 0 }) : 0
+  })).sort((a, b) => a.health - b.health);
+
+  const healthColor = (score) => {
+    if (score >= 70) return "green";
+    if (score >= 40) return "amber";
+    return "red";
+  };
+
+  $("chroBuTable").innerHTML = `
+    <table class="chro-bu-table">
+      <thead>
+        <tr>
+          <th>Business Unit</th>
+          <th>Total</th>
+          <th>Filled</th>
+          <th>Active</th>
+          <th>Closure</th>
+          <th>Avg TAT</th>
+          <th>Budget</th>
+          <th>Health</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${buRows.map((row) => `<tr>
+          <td><strong>${escapeHtml(row.bu)}</strong></td>
+          <td>${row.total}</td>
+          <td>${row.filled}</td>
+          <td>${row.active}</td>
+          <td><div class="metric-bar"><div class="metric-bar-fill" style="width: ${Math.round(row.closure * 100)}%"></div></div> ${pct(row.closure)}</td>
+          <td>${Math.round(row.tat ?? 0)}d</td>
+          <td>${pct(row.budget)}</td>
+          <td><span class="health-dot ${healthColor(row.health)}"></span> ${Math.round(row.health)}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+  `;
 }
 
 function qualityChecks(rows) {
