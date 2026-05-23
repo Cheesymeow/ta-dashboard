@@ -1161,12 +1161,365 @@ input:focus-visible {
   .panel, .kpi-card, .leader-card, .table-panel { box-shadow: none; break-inside: avoid; }
 }
 
-/* CHRO View Styles */
-.chro-headlines {
+/* CHRO View Styles â€” Storytelling Layout */
+
+/* Act 1: Hiring Pulse Banner */
+#chroHeadlines {
+  background: var(--paper);
+  border-left: 4px solid var(--chart-good);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  margin-bottom: 28px;
+}
+
+#chroHeadlines.pulse-moderate {
+  border-left-color: var(--chart-warn);
+}
+
+#chroHeadlines.pulse-risk {
+  border-left-color: var(--red);
+}
+
+.chro-pulse-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.chro-pulse-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--body);
+}
+
+.chro-pulse-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--alt-row);
+  color: var(--body);
+}
+
+.chro-pulse-badge.strong {
+  background: #D9F0E3;
+  color: var(--good);
+}
+
+.chro-pulse-badge.moderate {
+  background: #FFF3E0;
+  color: var(--chart-warn);
+}
+
+.chro-pulse-badge.risk {
+  background: #F5DCD9;
+  color: var(--red);
+}
+
+.chro-pulse-chips {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--body);
+}
+
+.chro-pulse-chip {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.chro-pulse-chip-value {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.chro-pulse-sentence {
+  font-size: 14px;
+  color: var(--muted);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* Act 2: Two-Column Section */
+.chro-two-col {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
+  grid-template-columns: 55% 1fr;
+  gap: 28px;
+  margin-bottom: 28px;
+}
+
+/* Funnel */
+#chroFunnel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chro-funnel-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chro-funnel-track-wrap {
+  flex: 1;
+  position: relative;
+  height: 32px;
+  background: var(--bar-track);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.chro-funnel-track {
+  height: 100%;
+  background: var(--chart-warn);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  transition: width 0.3s ease;
+}
+
+.chro-funnel-row:nth-child(1) .chro-funnel-track {
+  background: #8A8C91;
+}
+
+.chro-funnel-row:nth-child(3) .chro-funnel-track {
+  background: var(--chart-warn);
+}
+
+.chro-funnel-row:nth-child(5) .chro-funnel-track {
+  background: var(--chart-good);
+}
+
+.chro-funnel-label {
+  width: 100px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--body);
+  text-align: right;
+}
+
+.chro-funnel-count {
+  width: 40px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--body);
+}
+
+.chro-funnel-pct {
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: 8px;
+}
+
+/* BU At a Glance */
+#chroBuTable {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chro-bu-row {
+  display: grid;
+  grid-template-columns: 20px 1fr 40px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--alt-row);
+  font-size: 13px;
+}
+
+.chro-bu-row:hover {
+  background: #EAF3EE;
+}
+
+.chro-bu-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chro-bu-dot.green {
+  background: var(--good);
+}
+
+.chro-bu-dot.amber {
+  background: var(--chart-warn);
+}
+
+.chro-bu-dot.red {
+  background: var(--red);
+}
+
+.chro-bu-name {
+  font-weight: 600;
+  color: var(--body);
+}
+
+.chro-bu-stat {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.chro-bu-flag {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+  color: var(--muted);
+}
+
+.chro-bu-flag.escalate {
+  color: var(--red);
+}
+
+.chro-bu-flag.monitor {
+  color: var(--chart-warn);
+}
+
+.chro-bu-flag.track {
+  color: var(--good);
+}
+
+/* Act 3: Monthly Joiners Bar Chart */
+#chroVelocity {
+  position: relative;
+  height: 180px;
+  padding: 20px 0;
+}
+
+.chro-bars-grid {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 8px;
+  height: 140px;
+  position: relative;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 12px;
+}
+
+.chro-avg-line {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  border-top: 2px dashed var(--muted);
+  opacity: 0.5;
+}
+
+.chro-bar-item {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 32px;
+}
+
+.chro-bar-fill {
+  background: var(--chart-warn);
+  border-radius: 3px 3px 0 0;
+  width: 24px;
+  transition: height 0.3s ease;
+}
+
+.chro-bar-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+  transform: rotate(-45deg);
+  transform-origin: center;
+  margin-top: 4px;
+}
+
+/* Responsive */
+@media (max-width: 1180px) {
+  .chro-two-col {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  #chroFunnel {
+    order: 2;
+  }
+
+  #chroBuTable {
+    order: 1;
+  }
+}
+
+@media (max-width: 760px) {
+  #chroHeadlines {
+    padding: 16px;
+  }
+
+  .chro-pulse-title {
+    font-size: 16px;
+  }
+
+  .chro-pulse-chips {
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 12px;
+  }
+
+  .chro-pulse-sentence {
+    font-size: 12px;
+  }
+
+  .chro-two-col {
+    gap: 16px;
+  }
+
+  .chro-funnel-label {
+    width: 80px;
+    font-size: 11px;
+  }
+
+  .chro-funnel-count {
+    width: 32px;
+    font-size: 11px;
+  }
+
+  .chro-bu-row {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  #chroVelocity {
+    height: 150px;
+  }
+
+  .chro-bars-grid {
+    height: 100px;
+  }
+
+  .chro-bar-item {
+    min-width: 24px;
+  }
+
+  .chro-bar-fill {
+    width: 18px;
+  }
+
+  .chro-bar-label {
+    font-size: 9px;
+  }
 }
 
 .chro-headline-tile {
