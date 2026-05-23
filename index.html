@@ -62,6 +62,7 @@
     <nav class="view-tabs" aria-label="Dashboard views">
       <button class="view-tab active" type="button" data-view="overview">Dashboard</button>
       <button class="view-tab" type="button" data-view="tracker">Position Tracker</button>
+      <button class="view-tab" type="button" data-view="chro">CHRO View</button>
     </nav>
 
     <section class="filter-bar" aria-label="Filters">
@@ -202,6 +203,33 @@
         </table>
       </div>
       <div class="table-foot" id="tableFoot"></div>
+    </section>
+
+    <section class="view-panel" data-panel="chro">
+      <div class="chro-headlines" id="chroHeadlines"></div>
+      <div class="chro-mid">
+        <div class="panel">
+          <div class="panel-heading">
+            <h2>Hiring Funnel</h2>
+            <p>Stage-wise conversion from requisition to closure.</p>
+          </div>
+          <div id="chroFunnel"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-heading">
+            <h2>Monthly Velocity</h2>
+            <p>Joiners and offers per month, Apr-26 onwards.</p>
+          </div>
+          <div id="chroVelocity"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-heading">
+          <h2>Business Unit Scorecard</h2>
+          <p>Health, closure, TAT, and budget discipline by BU.</p>
+        </div>
+        <div id="chroBuTable"></div>
+      </div>
     </section>
   </main>
 
